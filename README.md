@@ -14,8 +14,8 @@ $ `python3 preprocessing.py`
     * Merge (=left-outer-join) `df_wpat` with `df_geom_cpoi` on `safegraph_place_id` column to have `top_category` value for each POI
     * From `df_wpat` dataframe, keep only POIs within Greater Toronto Area (all cities in Durham, Halton, Peel, Toronto, York)
     * From remaining POIs in `df_wpat`, keep only the ones with a healthcare related `top_category` value (by looking for related keywords Health, Medical, Dental, Hospital, etc.)
-    * Write the corresponding csv file for current `df_wpat` under "./data/SafeGraph/ProcessedWeeklyPatterns"
-* Repeat until we have all 54 processed weekly patterns csv files
+* Gather (concat) all 54 `df_wpat`s in a single dataframe `df` and sort it based on (`safegraph_place_id`, `date_range_start`) columns
+* Finally, write the sorted `df` in "./data/SafeGraph/weekly-patterns.csv"
 
 ## Visualization
 

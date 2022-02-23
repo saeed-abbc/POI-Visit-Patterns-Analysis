@@ -1,6 +1,5 @@
 import pandas as pd
 import os
-import pathlib
 
 
 base_path = os.path.join(os.getcwd(), 'data', 'SafeGraph')
@@ -14,7 +13,8 @@ def merge_geom_and_cpoi_dfs():
     df_cpoi = pd.read_csv(cpoi_path, usecols=['placekey', 'top_category'])
 
     df_geom_cpoi = df_geom.merge(df_cpoi, how='left', on='placekey')
-    assert len(df_geom_cpoi) == len(df_geom)
+    df_geom_cpoi['top_category'].fillna('', inplace=True)
+
     return df_geom_cpoi
 
 
@@ -26,7 +26,9 @@ def wpat_generator():
     for csv_name in sorted(os.listdir(wpat_path)):
         csv_path = os.path.join(wpat_path, csv_name)
 
-        df_wpat = pd.read_csv(csv_path)
+        df_wpat = pd.read_csv(csv_path, index_col=False)
+        df_wpat.drop(columns=['placekey', 'top_category'], errors='ignore', inplace=True)  # drop is for df_wpats having 'placekey' already included; if not drop we'd have duplicate non-join columns in the following merge
+
         df_wpat_geom_cpoi = df_wpat.merge(df_geom_cpoi, how='left', on='safegraph_place_id')  # some df_wpat rows don't have a corresponding row in df_geom
         yield csv_name, df_wpat_geom_cpoi
 
@@ -45,11 +47,11 @@ def filter_gta_pois(df_wpat):
 def filter_healthcare_pois(df_wpat):
     healthcare_keywords = {
         'Health', 'Medical', 'Dental', 'Surgical', 'Diagnostic', 'Emergency',
-        'Personal Care', 'Care Center', 'Care Retirement', 'Death Care', 'Care Support', 'Urgent Care',
+        'Personal Care', 'Care Center', 'Care Support', 'Urgent Care',
         'Physician', 'Dentist', 'Health Practitioner', 'Doctor', 'Nurse', 'Nursing', 'Patient',
         'Hospital', 'Clinic', 'Pharmacy', 'Pharmacies', 'Laboratory', 'Laboratories', 'Drug', 'Medicine',
-        'Blood Donor', 'Cancer Treatment', 'Foot Care', 'Diabetes', 'Care Home', 'Paramedic', 'Physiotherapy', 'Retirement Home'
-    }
+        'Blood Donor', 'Cancer Treatment', 'Foot Care', 'Diabetes', 'Care Home', 'Paramedic', 'Physiotherapy',
+    }  # 'Care Retirement', 'Retirement Home', 'Death Care' removed
 
     def is_healthcare(poi):
         cat = poi['top_category']
@@ -59,19 +61,25 @@ def filter_healthcare_pois(df_wpat):
 
 
 def preprocess_weekly_patterns():
-    proc_wpat_path = os.path.join(base_path, 'ProcessedWeeklyPatterns')
-    pathlib.Path(proc_wpat_path).mkdir(parents=True, exist_ok=True)
+    df = None
 
     for csv_name, df_wpat in wpat_generator():
         df_wpat = filter_gta_pois(df_wpat)
         df_wpat = filter_healthcare_pois(df_wpat)
 
-        tbw_path = os.path.join(proc_wpat_path, csv_name)
-        df_wpat.to_csv(tbw_path)
+        if df is None:
+            df = df_wpat
+        else:
+            df = pd.concat([df, df_wpat])
 
-        print(f'Preprocessed "{csv_name}" created.')
+        print(df.shape)
 
-    print(f'Done! Preprocessed weekly patterns are created under {proc_wpat_path}')
+    df = df.sort_values(['safegraph_place_id', 'date_range_start'], ascending=[True, True]).reset_index(drop=True)
+
+    tbw_path = os.path.join(base_path, 'weekly-patterns.csv')
+    df.to_csv(tbw_path)
+
+    print(f'Done! Preprocessed weekly patterns are available at {tbw_path}')
 
 
 if __name__ == '__main__':
