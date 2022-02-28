@@ -51,7 +51,7 @@ def plot(visit_list, case_list):
     plt.plot(visit_list, label = 'visits')
     plt.plot(case_list, label = 'cases')
     plt.legend()
-    plt.savefig('correlation')
+    plt.savefig('viz/correlation')
     plt.show()
 
 
