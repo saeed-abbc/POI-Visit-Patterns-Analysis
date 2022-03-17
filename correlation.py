@@ -50,6 +50,9 @@ def plot(visit_list, case_list):
     plt.title('Visits vs Cases')
     plt.plot(visit_list, label = 'visits')
     plt.plot(case_list, label = 'cases')
+    plt.ylabel('counts')
+    months = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr']
+    plt.xticks(np.linspace(0,54,12), months)
     plt.legend()
     plt.savefig('viz/correlation')
     plt.show()
