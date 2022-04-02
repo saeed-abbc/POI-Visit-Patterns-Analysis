@@ -155,6 +155,7 @@ cython_debug/
 data/SafeGraph/*
 #!data/SafeGraph/weekly-patterns.csv  # too large to push on server
 !data/SafeGraph/weekly-patterns-placeholder.csv
+!data/SafeGraph/cbg-clusters.csv
 
 data/CensusProfile/*
 !data/CensusProfile/cbgs-census.csv

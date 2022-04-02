@@ -111,6 +111,46 @@ def combine_cbgs_census_data_into_a_single_dataframe():
     cbgs_df.to_csv(os.path.join(cp_dir, 'cbgs-census.csv'))
 
 
+def plot_visit_dist():
+    df = pd.read_csv(os.path.join(base_path, 'SafeGraph', 'cbg-clusters.csv'))
+    import matplotlib.pyplot as plt
+    from collections import Counter
+
+    c = Counter(df['counts'])
+    keys = [k for k in sorted(c) if k <= 200]
+    plt.plot(keys, [c[k] for k in keys])
+    plt.xlabel('num visits')
+    plt.ylabel('frequency')
+    plt.show()
+
+
+def aggregate_cbgs_census_data_across_clusters():
+    clusters_df = pd.read_csv(os.path.join(base_path, 'SafeGraph', 'cbg-clusters.csv'))
+    clusters_df = clusters_df[clusters_df['cbg'].str.startswith('CA')]
+    clusters_df['cbg'] = clusters_df['cbg'].apply(lambda cbg: cbg.split(':')[1])
+    clusters_df = clusters_df.rename(columns={'cbg': 'geo_id', 'counts': 'visits'})
+
+    cbgs_df = pd.read_csv(os.path.join(base_path, 'CensusProfile', 'cbgs-census.csv'), index_col=0)
+    cbgs_df['geo_id'] = cbgs_df['geo_id'].apply(str)
+    cbgs_df = cbgs_df.merge(clusters_df, how='left', on='geo_id')
+
+    props_list = []
+    for col in cbgs_df.columns:
+        if col not in ['geo_uid', 'geo_id', 'cluster']:
+            d = {'property': f'{col}'}
+            gb = cbgs_df[[col, 'cluster']].groupby(['cluster'])
+            for key, item in gb:
+                d[f'cluster_{key}_mean'] = item[col].mean()
+                d[f'cluster_{key}_std'] = item[col].std()
+
+            props_list.append(d)
+
+    stats_df = pd.DataFrame(props_list)
+    print(stats_df)
+    stats_df.to_csv(os.path.join(base_path, 'cbg-stats.csv'))
+
+
 if __name__ == '__main__':
     # crawl_census_profile_data_for_cbgs_of_interest()
-    combine_cbgs_census_data_into_a_single_dataframe()
+    # combine_cbgs_census_data_into_a_single_dataframe()
+    aggregate_cbgs_census_data_across_clusters()
