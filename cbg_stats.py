@@ -145,7 +145,7 @@ def aggregate_cbgs_census_data_across_clusters():
 
             props_list.append(d)
 
-    stats_df = pd.DataFrame(props_list)
+    stats_df = pd.DataFrame(props_list).round(1)
     print(stats_df)
     stats_df.to_csv(os.path.join(base_path, 'cbg-stats.csv'))
 
