@@ -158,4 +158,4 @@ data/SafeGraph/*
 !data/SafeGraph/cbg-clusters.csv
 
 data/CensusProfile/*
-!data/CensusProfile/cbgs-census.csv
+!data/CensusProfile/cbgs-census*.csv
