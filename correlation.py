@@ -56,10 +56,28 @@ def plot(visit_list, case_list):
     plt.legend()
     plt.savefig('viz/correlation')
     plt.show()
+   
+def plot_scatter():
+    df = pd.read_csv('viz/cluster.csv')
+    cluster_mean = df[['counts', 'cluster']].groupby(['cluster']).mean().reset_index()
+    colors=[]
+    for cluster in df.cluster:
+        if cluster == 0: colors.append('#34eb62')
+        elif cluster ==1: colors.append('#f5c542')
+        else: colors.append('#f55742')
+    ax = df.plot(kind='scatter', marker='o', x='counts', y='cluster', color=colors, s=20, alpha=0.2)
+    ax.scatter(cluster_mean['counts'], cluster_mean['cluster'], marker='*', color='black', s=30, alpha=1)
+    ax.set(yticklabels=[])
+    plt.xlabel('visits')
+    plt.ylim(-0.05, 2.5)
+    plt.xlim(-0.05, 3000)
+    plt.savefig('viz/scatter.png', dpi=1000)
+    plt.show()
 
 
 if __name__ == '__main__':
     week_list, visit_list = get_visits()
     case_list = get_weeklyCases()
     plot(visit_list, case_list)
+    plot_scatter()
     
